@@ -58,6 +58,7 @@ export function FoodItemCard({ item, restaurant, quantity = 0, onAdd, onRemove }
                 onClick={() => onRemove(id)}
                 className="hover:bg-slate-100 p-1 rounded transition-colors"
                 title="Decrease"
+                aria-label={`Decrease quantity of ${name}`}
               >
                 <Minus className="h-3.5 w-3.5 stroke-[3]" />
               </button>
@@ -66,6 +67,7 @@ export function FoodItemCard({ item, restaurant, quantity = 0, onAdd, onRemove }
                 onClick={() => onAdd(item, restaurant)}
                 className="hover:bg-slate-100 p-1 rounded transition-colors"
                 title="Increase"
+                aria-label={`Increase quantity of ${name}`}
               >
                 <Plus className="h-3.5 w-3.5 stroke-[3]" />
               </button>
@@ -75,6 +77,7 @@ export function FoodItemCard({ item, restaurant, quantity = 0, onAdd, onRemove }
               onClick={() => onAdd(item, restaurant)}
               variant="outline"
               size="sm"
+              aria-label={`Add ${name} to cart`}
               className="h-9 px-6 font-extrabold text-[#fc8019] border-slate-200 hover:bg-orange-50 hover:border-orange-200 uppercase tracking-wider text-xs shadow-xs"
             >
               ADD

@@ -22,16 +22,16 @@ export function RestaurantsPage() {
       </div>
 
       {/* Filter Toolbar */}
-      <div className="sticky top-20 z-30 bg-white/95 backdrop-blur-md p-4 rounded-2xl shadow-sm border border-slate-200 mb-8 flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mr-2">
+      <div className="sticky top-20 z-30 bg-white/95 backdrop-blur-md p-3.5 rounded-2xl shadow-sm border border-slate-200 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full scrollbar-none">
+          <span className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mr-1 shrink-0">
             <Filter className="h-3.5 w-3.5 text-[#fc8019]" />
             Filters:
           </span>
 
           <button
             onClick={() => updateFilters({ isVeg: !filters.isVeg })}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
               filters.isVeg
                 ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
                 : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
@@ -43,7 +43,7 @@ export function RestaurantsPage() {
 
           <button
             onClick={() => updateFilters({ minRating: filters.minRating === 4.0 ? null : 4.0 })}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
               filters.minRating === 4.0
                 ? 'bg-amber-500 text-white border-amber-500 shadow-xs'
                 : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
@@ -55,7 +55,7 @@ export function RestaurantsPage() {
 
           <button
             onClick={() => updateFilters({ minRating: filters.minRating === 4.5 ? null : 4.5 })}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
               filters.minRating === 4.5
                 ? 'bg-emerald-700 text-white border-emerald-700 shadow-xs'
                 : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
@@ -67,7 +67,7 @@ export function RestaurantsPage() {
 
           <button
             onClick={() => updateFilters({ maxDeliveryMins: filters.maxDeliveryMins === 30 ? null : 30 })}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
               filters.maxDeliveryMins === 30
                 ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
                 : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
@@ -81,7 +81,7 @@ export function RestaurantsPage() {
             <button
               key={c}
               onClick={() => updateFilters({ cuisine: filters.cuisine === c ? null : c })}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+              className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
                 filters.cuisine === c
                   ? 'bg-[#fc8019] text-white border-[#fc8019] shadow-xs font-bold'
                   : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'

@@ -28,13 +28,14 @@ export function CheckoutPage() {
 
   const [selectedAddress, setSelectedAddress] = useState(ADDRESSES[0].id);
   const [selectedPayment, setSelectedPayment] = useState('upi');
-  const [upiId, setUpiId] = useState('');
+  const [upiId, setUpiId] = useState('user@okhdfcbank');
   const [isPlacing, setIsPlacing] = useState(false);
 
   const deliveryFee = 35;
   const platformFee = 10;
+  const codFee = selectedPayment === 'cod' ? 5 : 0;
   const gstTax = Math.round(cartTotal * 0.05);
-  const grandTotal = cartTotal + deliveryFee + platformFee + gstTax;
+  const grandTotal = cartTotal + deliveryFee + platformFee + codFee + gstTax;
 
   if (isEmpty) {
     return (
@@ -247,6 +248,12 @@ export function CheckoutPage() {
                 <span>Platform Fee</span>
                 <span className="font-semibold text-slate-800">₹{platformFee}</span>
               </div>
+              {codFee > 0 && (
+                <div className="flex justify-between text-amber-600">
+                  <span>Cash on Delivery Fee</span>
+                  <span className="font-semibold">₹{codFee}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span>GST (5%)</span>
                 <span className="font-semibold text-slate-800">₹{gstTax}</span>

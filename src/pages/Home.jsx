@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Search, SlidersHorizontal, ArrowRight, Sparkles, TrendingUp } from 'lucide-react';
+import { Search, ArrowRight, Sparkles, TrendingUp } from 'lucide-react';
 import { FOOD_CATEGORIES } from '../data/categories';
 import { useRestaurants } from '../hooks/useRestaurants';
 import { RestaurantCard } from '../components/common/RestaurantCard';
@@ -165,7 +165,7 @@ export function Home() {
         ) : restaurants.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
             <p className="text-lg font-bold text-slate-600">No restaurants match your filters.</p>
-            <Button onClick={() => updateFilters({ isVeg: false, minRating: null, sortBy: null })} className="mt-4">
+            <Button onClick={() => updateFilters({ isVeg: false, minRating: null, sortBy: null, maxDeliveryMins: null, cuisine: null })} className="mt-4">
               Reset Filters
             </Button>
           </div>
@@ -184,10 +184,14 @@ export function Home() {
           Best Cuisines Near Me
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          {['Chinese Restaurant Near Me', 'South Indian Restaurant Near Me', 'Indian Restaurant Near Me', 'Kerala Restaurant Near Me', 'Korean Restaurant Near Me', 'North Indian Restaurant Near Me', 'Seafood Restaurant Near Me', 'Bengali Restaurant Near Me'].map((cuisine, i) => (
-            <div key={i} className="flex items-center justify-center p-4 border border-slate-200 rounded-xl bg-white text-slate-600 font-medium text-sm hover:border-[#fc8019] hover:text-[#fc8019] cursor-pointer transition-colors text-center shadow-xs">
-              {cuisine}
-            </div>
+          {['Chinese', 'South Indian', 'North Indian', 'Biryani', 'Burgers', 'Pizzas', 'Desserts', 'Rolls & Wrap'].map((cuisine, i) => (
+            <button
+              key={i}
+              onClick={() => navigate(getSearchPath(cuisine))}
+              className="flex items-center justify-center p-4 border border-slate-200 rounded-xl bg-white text-slate-600 font-medium text-sm hover:border-[#fc8019] hover:text-[#fc8019] cursor-pointer transition-colors text-center shadow-xs"
+            >
+              {cuisine} Near Me
+            </button>
           ))}
         </div>
       </section>

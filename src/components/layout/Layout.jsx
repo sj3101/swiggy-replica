@@ -12,7 +12,7 @@ export function Layout() {
         <Outlet />
       </main>
       <Footer />
-      <ToastContainer limit={3} />
+      <ToastContainer position="bottom-right" limit={3} />
     </div>
   );
 }
