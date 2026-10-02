@@ -1,93 +1,141 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useLocalStorage } from './useLocalStorage';
-import { showSuccessToast, showInfoToast, showWarningToast } from '../utils/toast';
+import { showSuccessToast, showInfoToast, showWarningToast, showErrorToast } from '../utils/toast';
 
 export function useCart() {
   const [cartItems, setCartItems] = useLocalStorage('swiggy_cart', []);
   const [cartRestaurant, setCartRestaurant] = useLocalStorage('swiggy_cart_restaurant', null);
 
-  // Sync state if another tab updates localStorage
-  useEffect(() => {
-    const handleStorageChange = () => {
-      try {
-        const item = window.localStorage.getItem('swiggy_cart');
-        if (item) setCartItems(JSON.parse(item));
-        const rest = window.localStorage.getItem('swiggy_cart_restaurant');
-        if (rest) setCartRestaurant(JSON.parse(rest));
-      } catch (e) {
-        console.error(e);
-      }
-    };
-    window.addEventListener('local-storage-update', handleStorageChange);
-    return () => window.removeEventListener('local-storage-update', handleStorageChange);
-  }, []);
+  // Conflict state: when user tries to add from a different restaurant
+  const [conflictPending, setConflictPending] = useState(null); // { foodItem, restaurant }
 
+  /**
+   * Attempt to add item. Returns `{ conflict: true }` if items from another
+   * restaurant are already in cart, storing the pending action in state so
+   * the UI can show a confirmation dialog.
+   */
   const addToCart = (foodItem, restaurant) => {
-    // If cart has items from another restaurant
+    if (!restaurant) {
+      showErrorToast('Restaurant information is missing.');
+      return { conflict: false };
+    }
+
+    // Conflict: cart has items from a different restaurant
     if (cartRestaurant && cartRestaurant.id !== restaurant.id && cartItems.length > 0) {
-      showWarningToast(`Your cart contains items from ${cartRestaurant.name}. Reset cart to add items from ${restaurant.name}?`);
-      // We can offer helper clearAndAdd or handle in UI modal
+      setConflictPending({ foodItem, restaurant, existingRestaurant: cartRestaurant });
       return { conflict: true, existingRestaurant: cartRestaurant };
     }
 
-    setCartRestaurant(restaurant);
-
-    setCartItems((prevItems) => {
-      const existingIndex = prevItems.findIndex((i) => i.id === foodItem.id);
-      if (existingIndex > -1) {
-        const updated = [...prevItems];
-        updated[existingIndex].quantity += 1;
-        showSuccessToast(`Increased quantity of ${foodItem.name}`);
-        return updated;
-      } else {
-        showSuccessToast(`Added ${foodItem.name} to cart`);
-        return [...prevItems, { ...foodItem, quantity: 1 }];
-      }
-    });
-
+    _doAdd(foodItem, restaurant);
     return { conflict: false };
   };
 
-  const removeFromCart = (foodItemId) => {
-    setCartItems((prevItems) => {
-      const existingIndex = prevItems.findIndex((i) => i.id === foodItemId);
-      if (existingIndex === -1) return prevItems;
-
-      const item = prevItems[existingIndex];
-      if (item.quantity > 1) {
-        const updated = [...prevItems];
-        updated[existingIndex].quantity -= 1;
-        showInfoToast(`Decreased quantity of ${item.name}`);
-        return updated;
-      } else {
-        const updated = prevItems.filter((i) => i.id !== foodItemId);
-        showInfoToast(`Removed ${item.name} from cart`);
-        if (updated.length === 0) {
-          setCartRestaurant(null);
+  /** Internal: actually adds the item, assumes no conflict */
+  const _doAdd = (foodItem, restaurant) => {
+    try {
+      setCartRestaurant(restaurant);
+      setCartItems((prevItems) => {
+        const existingIndex = prevItems.findIndex((i) => i.id === foodItem.id);
+        if (existingIndex > -1) {
+          // Immutably update quantity
+          const updated = prevItems.map((i, idx) =>
+            idx === existingIndex ? { ...i, quantity: i.quantity + 1 } : i
+          );
+          showSuccessToast(`${foodItem.name} quantity updated!`);
+          return updated;
+        } else {
+          showSuccessToast(`${foodItem.name} added to cart!`);
+          return [...prevItems, { ...foodItem, quantity: 1 }];
         }
-        return updated;
-      }
-    });
+      });
+    } catch (e) {
+      console.error('Failed to add to cart:', e);
+      showErrorToast('Could not add item to cart. Please try again.');
+    }
   };
 
-  const updateQuantity = (foodItemId, newQuantity) => {
-    if (newQuantity <= 0) {
-      setCartItems((prev) => {
-        const updated = prev.filter((i) => i.id !== foodItemId);
-        if (updated.length === 0) setCartRestaurant(null);
-        return updated;
-      });
-      return;
+  /**
+   * Called when user confirms "clear existing cart and add new item".
+   * Clears the cart, then adds the pending item.
+   */
+  const confirmReplaceCart = () => {
+    if (!conflictPending) return;
+    const { foodItem, restaurant } = conflictPending;
+    try {
+      setCartItems([]);
+      setCartRestaurant(null);
+      setConflictPending(null);
+      // Small timeout so state flushes before re-add
+      setTimeout(() => {
+        _doAdd(foodItem, restaurant);
+      }, 0);
+    } catch (e) {
+      console.error('Failed to replace cart:', e);
+      showErrorToast('Something went wrong. Please try again.');
     }
-    setCartItems((prev) =>
-      prev.map((i) => (i.id === foodItemId ? { ...i, quantity: newQuantity } : i))
-    );
+  };
+
+  /** Cancel the pending conflict action */
+  const cancelConflict = () => {
+    setConflictPending(null);
+  };
+
+  /** Decrease quantity by 1; remove if quantity hits 0 */
+  const removeFromCart = (foodItemId) => {
+    try {
+      setCartItems((prevItems) => {
+        const existingIndex = prevItems.findIndex((i) => i.id === foodItemId);
+        if (existingIndex === -1) return prevItems;
+
+        const item = prevItems[existingIndex];
+        if (item.quantity > 1) {
+          const updated = prevItems.map((i, idx) =>
+            idx === existingIndex ? { ...i, quantity: i.quantity - 1 } : i
+          );
+          return updated;
+        } else {
+          const updated = prevItems.filter((i) => i.id !== foodItemId);
+          showInfoToast(`${item.name} removed from cart`);
+          if (updated.length === 0) {
+            setCartRestaurant(null);
+          }
+          return updated;
+        }
+      });
+    } catch (e) {
+      console.error('Failed to remove from cart:', e);
+      showErrorToast('Could not update cart. Please try again.');
+    }
+  };
+
+  /** Set an explicit quantity (0 = remove) */
+  const updateQuantity = (foodItemId, newQuantity) => {
+    try {
+      if (newQuantity <= 0) {
+        setCartItems((prev) => {
+          const updated = prev.filter((i) => i.id !== foodItemId);
+          if (updated.length === 0) setCartRestaurant(null);
+          return updated;
+        });
+        return;
+      }
+      setCartItems((prev) =>
+        prev.map((i) => (i.id === foodItemId ? { ...i, quantity: newQuantity } : i))
+      );
+    } catch (e) {
+      console.error('Failed to update quantity:', e);
+      showErrorToast('Could not update quantity. Please try again.');
+    }
   };
 
   const clearCart = () => {
-    setCartItems([]);
-    setCartRestaurant(null);
-    showInfoToast('Cart cleared');
+    try {
+      setCartItems([]);
+      setCartRestaurant(null);
+      showInfoToast('Cart cleared');
+    } catch (e) {
+      console.error('Failed to clear cart:', e);
+    }
   };
 
   const getItemQuantity = (foodItemId) => {
@@ -109,5 +157,9 @@ export function useCart() {
     cartTotal,
     cartCount,
     isEmpty: cartItems.length === 0,
+    // Conflict resolution
+    conflictPending,
+    confirmReplaceCart,
+    cancelConflict,
   };
 }

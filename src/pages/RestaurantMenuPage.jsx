@@ -1,49 +1,69 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Clock, MapPin, Tag, Search, ArrowLeft, Utensils, Check } from 'lucide-react';
+import { Clock, MapPin, Tag, Search, ArrowLeft, Utensils, Check, ShoppingBag, AlertTriangle } from 'lucide-react';
 import { useRestaurantMenu } from '../hooks/useRestaurants';
 import { useCart } from '../hooks/useCart';
 import { FoodItemCard } from '../components/common/FoodItemCard';
 import { RatingBadge } from '../components/common/RatingBadge';
-import { ROUTES } from '../constants/routes';
+import { Dialog } from '../components/ui/Dialog';
 import { Button } from '../components/ui/Button';
+import { ROUTES } from '../constants/routes';
 
 export function RestaurantMenuPage() {
   const { id } = useParams();
   const { restaurant, foodItems, loading, error } = useRestaurantMenu(id);
-  const { addToCart, removeFromCart, getItemQuantity, cartCount, cartTotal } = useCart();
+  const {
+    addToCart,
+    removeFromCart,
+    getItemQuantity,
+    cartCount,
+    cartTotal,
+    conflictPending,
+    confirmReplaceCart,
+    cancelConflict,
+  } = useCart();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [vegOnly, setVegOnly] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
 
+  /* ── Loading skeleton ─────────────────────────────────────────── */
   if (loading) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-12">
-        <div className="h-40 rounded-2xl bg-slate-200 animate-pulse mb-8" />
-        <div className="h-10 w-48 bg-slate-200 animate-pulse mb-6 rounded-lg" />
+        <div className="h-8 w-40 rounded-lg bg-slate-200 animate-pulse mb-8" />
+        <div className="h-44 rounded-3xl bg-slate-200 animate-pulse mb-8" />
+        <div className="h-10 w-full rounded-lg bg-slate-200 animate-pulse mb-6" />
         <div className="space-y-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-28 rounded-xl bg-slate-200 animate-pulse" />
+            <div key={i} className="h-28 rounded-2xl bg-slate-200 animate-pulse" />
           ))}
         </div>
       </div>
     );
   }
 
+  /* ── Error / not found ────────────────────────────────────────── */
   if (error || !restaurant) {
     return (
       <div className="mx-auto max-w-xl text-center py-20 px-4">
+        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-red-50 text-red-400 mb-4">
+          <AlertTriangle className="h-10 w-10" />
+        </div>
         <h2 className="text-2xl font-bold text-slate-800">Restaurant Not Found</h2>
-        <p className="text-slate-500 mt-2">The requested restaurant menu could not be loaded.</p>
+        <p className="text-slate-500 mt-2">
+          {error || 'The requested restaurant does not exist.'}
+        </p>
         <Link to={ROUTES.RESTAURANTS}>
-          <Button className="mt-6">Back to Restaurants</Button>
+          <Button className="mt-6">← Back to Restaurants</Button>
         </Link>
       </div>
     );
   }
 
-  // Filter items
+  /* ── Filter logic ─────────────────────────────────────────────── */
+  const categories = ['All', ...new Set(foodItems.map((item) => item.category))];
+
   const filteredItems = foodItems.filter((item) => {
     if (vegOnly && !item.isVeg) return false;
     if (selectedCategory !== 'All' && item.category !== selectedCategory) return false;
@@ -51,18 +71,16 @@ export function RestaurantMenuPage() {
       const q = searchQuery.toLowerCase().trim();
       return (
         item.name.toLowerCase().includes(q) ||
-        item.description.toLowerCase().includes(q) ||
+        (item.description && item.description.toLowerCase().includes(q)) ||
         item.category.toLowerCase().includes(q)
       );
     }
     return true;
   });
 
-  const categories = ['All', ...new Set(foodItems.map((item) => item.category))];
-
   return (
-    <div className="pb-24">
-      {/* Breadcrumb / Back button */}
+    <div className="pb-28">
+      {/* ── Back link ─────────────────────────────────────────────── */}
       <div className="mx-auto max-w-4xl px-4 pt-6">
         <Link
           to={ROUTES.RESTAURANTS}
@@ -73,12 +91,12 @@ export function RestaurantMenuPage() {
         </Link>
       </div>
 
-      {/* Restaurant Info Header */}
+      {/* ── Restaurant Info Card ───────────────────────────────────── */}
       <div className="mx-auto max-w-4xl px-4 mt-4">
         <div className="rounded-3xl bg-white p-6 shadow-md border border-slate-100 flex flex-col md:flex-row justify-between gap-6">
           <div className="flex-1 flex flex-col justify-between">
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
                   {restaurant.name}
                 </h1>
@@ -97,7 +115,6 @@ export function RestaurantMenuPage() {
               </div>
             </div>
 
-            {/* Offer highlight */}
             {restaurant.offers && (
               <div className="mt-4 inline-flex items-center gap-2 bg-orange-50 border border-orange-200 text-[#fc8019] px-3 py-1.5 rounded-xl font-bold text-xs w-fit">
                 <Tag className="h-4 w-4" />
@@ -106,9 +123,9 @@ export function RestaurantMenuPage() {
             )}
           </div>
 
-          {/* Rating box */}
+          {/* Rating / delivery info box */}
           <div className="flex flex-row md:flex-col items-center justify-between md:justify-center gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100 shrink-0 min-w-[140px]">
-            <RatingBadge rating={restaurant.rating} className="px-3 py-1 text-sm font-bold" />
+            <RatingBadge rating={restaurant.rating} />
             <div className="text-center">
               <span className="flex items-center justify-center gap-1 text-xs font-bold text-slate-700">
                 <Clock className="h-3.5 w-3.5 text-slate-500" />
@@ -122,11 +139,11 @@ export function RestaurantMenuPage() {
         </div>
       </div>
 
-      {/* Menu Filters & Search */}
+      {/* ── Menu Filters ──────────────────────────────────────────── */}
       <div className="mx-auto max-w-4xl px-4 mt-8">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pb-4 border-b border-slate-200">
-          {/* Veg Only Toggle */}
-          <div className="flex items-center gap-4 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            {/* Veg only toggle */}
             <button
               onClick={() => setVegOnly(!vegOnly)}
               className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold border transition-colors cursor-pointer ${
@@ -139,7 +156,7 @@ export function RestaurantMenuPage() {
               Veg Only
             </button>
 
-            {/* Categories filter pills */}
+            {/* Category pills */}
             <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
               {categories.map((cat) => (
                 <button
@@ -147,7 +164,7 @@ export function RestaurantMenuPage() {
                   onClick={() => setSelectedCategory(cat)}
                   className={`px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                     selectedCategory === cat
-                      ? 'bg-slate-900 text-white font-bold'
+                      ? 'bg-slate-900 text-white'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
@@ -157,7 +174,7 @@ export function RestaurantMenuPage() {
             </div>
           </div>
 
-          {/* Search inside menu */}
+          {/* Dish search */}
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
             <input
@@ -171,12 +188,13 @@ export function RestaurantMenuPage() {
         </div>
       </div>
 
-      {/* Menu List */}
+      {/* ── Menu Items ────────────────────────────────────────────── */}
       <div className="mx-auto max-w-4xl px-4 mt-6">
         {filteredItems.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-2xl border border-slate-200">
-            <Utensils className="mx-auto h-10 w-10 text-slate-300 mb-2" />
-            <p className="font-bold text-slate-700">No dishes match your criteria.</p>
+          <div className="text-center py-14 bg-white rounded-2xl border border-slate-200">
+            <Utensils className="mx-auto h-10 w-10 text-slate-300 mb-3" />
+            <p className="font-bold text-slate-700 text-base">No dishes match your criteria</p>
+            <p className="text-sm text-slate-400 mt-1">Try adjusting the filters or searching for something else.</p>
             <Button
               variant="ghost"
               size="sm"
@@ -185,33 +203,66 @@ export function RestaurantMenuPage() {
                 setSelectedCategory('All');
                 setSearchQuery('');
               }}
-              className="mt-2 text-xs text-[#fc8019]"
+              className="mt-3 text-xs text-[#fc8019]"
             >
               Clear Filters
             </Button>
           </div>
         ) : (
-          <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 divide-y divide-slate-100">
-            {filteredItems.map((item) => (
-              <FoodItemCard
-                key={item.id}
-                item={item}
-                restaurant={restaurant}
-                quantity={getItemQuantity(item.id)}
-                onAdd={addToCart}
-                onRemove={removeFromCart}
-              />
-            ))}
+          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+            {/* Group by category */}
+            {selectedCategory === 'All'
+              ? categories.slice(1).map((cat) => {
+                  const items = filteredItems.filter((i) => i.category === cat);
+                  if (items.length === 0) return null;
+                  return (
+                    <div key={cat}>
+                      <div className="px-6 pt-6 pb-2">
+                        <h3 className="text-base font-black text-slate-800 tracking-tight">
+                          {cat}
+                          <span className="ml-2 text-xs font-semibold text-slate-400">({items.length})</span>
+                        </h3>
+                        <div className="mt-1 h-px bg-slate-100" />
+                      </div>
+                      <div className="px-4 divide-y divide-slate-100">
+                        {items.map((item) => (
+                          <FoodItemCard
+                            key={item.id}
+                            item={item}
+                            restaurant={restaurant}
+                            quantity={getItemQuantity(item.id)}
+                            onAdd={addToCart}
+                            onRemove={removeFromCart}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })
+              : (
+                <div className="px-4 divide-y divide-slate-100">
+                  {filteredItems.map((item) => (
+                    <FoodItemCard
+                      key={item.id}
+                      item={item}
+                      restaurant={restaurant}
+                      quantity={getItemQuantity(item.id)}
+                      onAdd={addToCart}
+                      onRemove={removeFromCart}
+                    />
+                  ))}
+                </div>
+              )}
           </div>
         )}
       </div>
 
-      {/* Floating Bottom Cart Bar if items in cart */}
+      {/* ── Floating Cart Bar ─────────────────────────────────────── */}
       {cartCount > 0 && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-full max-w-lg px-4">
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-full max-w-sm px-4">
           <Link
             to={ROUTES.CART}
-            className="flex items-center justify-between rounded-2xl bg-[#48c479] text-white p-4 shadow-2xl hover:bg-[#3db36c] transition-all hover:scale-[1.02]"
+            className="flex items-center justify-between rounded-2xl bg-[#48c479] text-white p-4 shadow-2xl hover:bg-[#3db36c] transition-all hover:scale-[1.02] active:scale-[0.99]"
           >
             <div className="flex items-center gap-3">
               <span className="bg-white/20 px-2.5 py-1 rounded-lg font-black text-sm">
@@ -219,13 +270,38 @@ export function RestaurantMenuPage() {
               </span>
               <span className="font-extrabold text-base">₹{cartTotal}</span>
             </div>
-            <div className="flex items-center gap-1 font-extrabold text-sm uppercase tracking-wider">
+            <div className="flex items-center gap-1.5 font-extrabold text-sm uppercase tracking-wider">
+              <ShoppingBag className="h-4 w-4" />
               <span>VIEW CART</span>
-              <ArrowLeft className="h-4 w-4 rotate-180" />
             </div>
           </Link>
         </div>
       )}
+
+      {/* ── Restaurant Conflict Dialog ─────────────────────────────── */}
+      <Dialog
+        isOpen={!!conflictPending}
+        onClose={cancelConflict}
+        title="Start a new cart?"
+        description={
+          conflictPending
+            ? `Your cart has items from "${conflictPending.existingRestaurant?.name}". Adding items from "${conflictPending.restaurant?.name}" will clear your current cart.`
+            : ''
+        }
+        footer={
+          <>
+            <Button variant="outline" onClick={cancelConflict}>
+              Keep Existing Cart
+            </Button>
+            <Button
+              className="bg-[#fc8019] hover:bg-orange-600"
+              onClick={confirmReplaceCart}
+            >
+              Start New Cart
+            </Button>
+          </>
+        }
+      />
     </div>
   );
 }

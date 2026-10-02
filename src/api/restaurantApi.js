@@ -19,6 +19,13 @@ export const restaurantApi = {
       result = result.filter(r => r.rating >= filters.minRating);
     }
 
+    if (filters.maxDeliveryMins) {
+      result = result.filter(r => {
+        const mins = parseInt(r.deliveryTime);
+        return !isNaN(mins) && mins <= filters.maxDeliveryMins;
+      });
+    }
+
     if (filters.cuisine) {
       const cuisineLower = filters.cuisine.toLowerCase();
       result = result.filter(r => r.cuisines.some(c => c.toLowerCase().includes(cuisineLower)));
@@ -88,15 +95,24 @@ export const restaurantApi = {
       r.location.toLowerCase().includes(q)
     );
 
-    const matchingFoodItems = FOOD_ITEMS_DATA.filter(item => 
-      item.name.toLowerCase().includes(q) ||
-      item.description.toLowerCase().includes(q) ||
-      item.category.toLowerCase().includes(q)
-    );
+    // Build a lookup map for restaurants by id
+    const restaurantMap = {};
+    RESTAURANTS_DATA.forEach(r => { restaurantMap[r.id] = r; });
+
+    const matchingFoodItems = FOOD_ITEMS_DATA
+      .filter(item =>
+        item.name.toLowerCase().includes(q) ||
+        (item.description && item.description.toLowerCase().includes(q)) ||
+        item.category.toLowerCase().includes(q)
+      )
+      .map(item => ({
+        ...item,
+        restaurant: restaurantMap[item.restaurantId] || null,
+      }));
 
     return {
       restaurants: matchingRestaurants,
-      foodItems: matchingFoodItems
+      foodItems: matchingFoodItems,
     };
   },
 

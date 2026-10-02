@@ -65,6 +65,18 @@ export function RestaurantsPage() {
             Rating 4.5+
           </button>
 
+          <button
+            onClick={() => updateFilters({ maxDeliveryMins: filters.maxDeliveryMins === 30 ? null : 30 })}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
+              filters.maxDeliveryMins === 30
+                ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+            }`}
+          >
+            <Clock className="h-3.5 w-3.5" />
+            Under 30 mins
+          </button>
+
           {cuisinesList.map((c) => (
             <button
               key={c}
@@ -95,7 +107,7 @@ export function RestaurantsPage() {
             <option value="costHighToLow">Cost: High to Low</option>
           </select>
 
-          {(filters.isVeg || filters.minRating || filters.cuisine || filters.sortBy) && (
+          {(filters.isVeg || filters.minRating || filters.cuisine || filters.sortBy || filters.maxDeliveryMins) && (
             <Button
               variant="ghost"
               size="sm"

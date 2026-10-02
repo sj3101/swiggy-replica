@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Search, ShoppingBag, MapPin, ChevronDown, User, HelpCircle, UtensilsCrossed, Receipt } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Search, ShoppingBag, MapPin, ChevronDown, User, HelpCircle, UtensilsCrossed } from 'lucide-react';
 import { ROUTES } from '../../constants/routes';
 import { useCart } from '../../hooks/useCart';
 import { Dialog } from '../ui/Dialog';
