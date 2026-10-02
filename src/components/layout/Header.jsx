@@ -79,18 +79,24 @@ export function Header() {
               }`}
             >
               <UtensilsCrossed className="h-5 w-5" />
-              <span className="hidden sm:inline">Restaurants</span>
+              <span className="hidden lg:inline">Offers</span>
             </Link>
 
-            <Link
-              to={ROUTES.ORDERS}
-              className={`flex items-center gap-2 py-2 px-3 rounded-lg hover:text-[#fc8019] transition-colors ${
-                location.pathname === ROUTES.ORDERS ? 'text-[#fc8019]' : ''
-              }`}
+            <button
+              onClick={() => alert('Swiggy Help center is available 24/7!')}
+              className="hidden md:flex items-center gap-2 py-2 px-3 hover:text-[#fc8019] transition-colors"
             >
-              <Receipt className="h-5 w-5" />
-              <span className="hidden sm:inline">Orders</span>
-            </Link>
+              <HelpCircle className="h-5 w-5" />
+              <span className="hidden lg:inline">Help</span>
+            </button>
+
+            <button
+              onClick={() => alert('Sign In functionality coming soon!')}
+              className="hidden md:flex items-center gap-2 py-2 px-3 hover:text-[#fc8019] transition-colors"
+            >
+              <User className="h-5 w-5" />
+              <span className="hidden lg:inline">Sign In</span>
+            </button>
 
             <Link
               to={ROUTES.CART}
@@ -113,14 +119,6 @@ export function Header() {
                 </span>
               )}
             </Link>
-
-            <button
-              onClick={() => alert('Swiggy Help center is available 24/7!')}
-              className="hidden lg:flex items-center gap-2 py-2 px-3 hover:text-[#fc8019] transition-colors"
-            >
-              <HelpCircle className="h-5 w-5" />
-              <span>Help</span>
-            </button>
           </nav>
         </div>
       </header>

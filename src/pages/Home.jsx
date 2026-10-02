@@ -75,21 +75,21 @@ export function Home() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-4">
+        <div className="flex overflow-x-auto gap-4 no-scrollbar pb-4 snap-x">
           {FOOD_CATEGORIES.map((cat) => (
             <button
               key={cat.id}
               onClick={() => navigate(getSearchPath(cat.name))}
-              className="flex flex-col items-center group cursor-pointer p-2 rounded-2xl transition-all hover:bg-white hover:shadow-md border border-transparent hover:border-slate-100"
+              className="flex flex-col items-center group cursor-pointer p-2 shrink-0 snap-start transition-all border border-transparent"
             >
-              <div className="h-20 w-20 sm:h-24 sm:w-24 overflow-hidden rounded-full shadow-xs bg-slate-100 border-2 border-white group-hover:scale-105 transition-transform duration-300">
+              <div className="h-24 w-24 sm:h-32 sm:w-32 overflow-hidden rounded-full shadow-xs bg-slate-100 border-2 border-white group-hover:scale-105 transition-transform duration-300">
                 <img
                   src={cat.image}
                   alt={cat.name}
                   className="h-full w-full object-cover"
                 />
               </div>
-              <span className="mt-2 text-xs sm:text-sm font-bold text-slate-700 group-hover:text-[#fc8019] text-center truncate w-full">
+              <span className="mt-2 text-sm sm:text-base font-bold text-slate-700 group-hover:text-[#fc8019] text-center w-full">
                 {cat.name}
               </span>
             </button>
@@ -176,6 +176,20 @@ export function Home() {
             ))}
           </div>
         )}
+      </section>
+
+      {/* Popular Cuisines */}
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-14 mb-8">
+        <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-6">
+          Best Cuisines Near Me
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          {['Chinese Restaurant Near Me', 'South Indian Restaurant Near Me', 'Indian Restaurant Near Me', 'Kerala Restaurant Near Me', 'Korean Restaurant Near Me', 'North Indian Restaurant Near Me', 'Seafood Restaurant Near Me', 'Bengali Restaurant Near Me'].map((cuisine, i) => (
+            <div key={i} className="flex items-center justify-center p-4 border border-slate-200 rounded-xl bg-white text-slate-600 font-medium text-sm hover:border-[#fc8019] hover:text-[#fc8019] cursor-pointer transition-colors text-center shadow-xs">
+              {cuisine}
+            </div>
+          ))}
+        </div>
       </section>
     </div>
   );
